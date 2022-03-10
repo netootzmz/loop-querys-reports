@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: queries-reports-service
+  namespace: smartqa
+  labels:
+    app: queries-reports
+spec:
+  type: NodePort
+  selector:
+    app: queries-reports
+  ports:
+    - protocol: TCP
+      name: queries-reports-port
+      port: 8086
+      targetPort: 8086
+---
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: queries-reports-deployment
+  namespace: smartqa
+spec:
+  selector:
+    matchLabels:
+      app: queries-reports
+  replicas: 1 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: queries-reports
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: queries-reports
+        image: 451480023059.dkr.ecr.us-east-2.amazonaws.com/queries-reports:qa-latest
+        imagePullPolicy: "Always"
+        ports:
+        - containerPort: 8086
+        env:
+        - name: DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: secrets-ecommerce-qa
+              key: dbUrl
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: secrets-ecommerce-qa
+              key: dbUser
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secrets-ecommerce-qa
+              key: dbPassword
+---
